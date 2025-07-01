@@ -1,52 +1,61 @@
 package com.bookmanagement.service;
 
+import com.bookmanagement.dto.BookRequestDTO;
+import com.bookmanagement.dto.BookSummaryDTO;
+import com.bookmanagement.mapper.BookMapper;
 import com.bookmanagement.model.Book;
 import com.bookmanagement.repository.BookRepository;
 import jakarta.persistence.EntityNotFoundException;
+import lombok.RequiredArgsConstructor;
 import org.springframework.stereotype.Service;
 
 import java.time.Year;
 import java.util.List;
 
 @Service
+@RequiredArgsConstructor
 public class BookServiceImpl implements BookService {
+
     private final BookRepository bookRepository;
+    private final BookMapper bookMapper;
 
-    public BookServiceImpl(BookRepository bookRepository) {
-        this.bookRepository = bookRepository;
+    @Override
+    public List<BookSummaryDTO> getAllBooks() {
+        List<Book> books = bookRepository.findAll();
+        return bookMapper.toSummaryDtoList(books);
     }
 
     @Override
-    public List<Book> getAllBooks() {
-        return bookRepository.findAll();
+    public BookSummaryDTO getBookById(Long id) {
+        Book book = bookRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Book with ID " + id + " not found"));
+        return bookMapper.toSummaryDto(book);
     }
 
     @Override
-    public Book getBookById(Long id) {
-        return bookRepository.findById(id)
-                .orElseThrow(() -> new EntityNotFoundException("Book not found with id: " + id));
+    public BookSummaryDTO createBook(BookRequestDTO bookDto) {
+        validatePublishedYear(bookDto.getPublishedYear());
+        Book book = bookMapper.toEntity(bookDto);
+        Book saved = bookRepository.save(book);
+        return bookMapper.toSummaryDto(saved);
     }
 
     @Override
-    public Book createBook(Book book) {
+    public BookSummaryDTO updateBook(Long id, BookRequestDTO book) {
         validatePublishedYear(book.getPublishedYear());
-        return bookRepository.save(book);
-    }
-
-    @Override
-    public Book updateBook(Long id, Book book) {
-        Book existing = getBookById(id);
-        validatePublishedYear(book.getPublishedYear());
-        existing.setTitle(book.getTitle());
-        existing.setAuthor(book.getAuthor());
-        existing.setPublishedYear(book.getPublishedYear());
-        return bookRepository.save(existing);
+        Book existing = bookRepository.findById(id)
+                .orElseThrow(() -> new EntityNotFoundException("Book with ID " + id + " not found"));
+        bookMapper.updateBookFromDto(book, existing);
+        Book updated = bookRepository.save(existing);
+        return bookMapper.toSummaryDto(updated);
     }
 
     @Override
     public void deleteBook(Long id) {
-        Book existing = getBookById(id);
-        bookRepository.delete(existing);
+        if (!bookRepository.existsById(id)) {
+            throw new EntityNotFoundException("Book with ID " + id + " not found");
+        }
+        bookRepository.deleteById(id);
     }
 
     private void validatePublishedYear(Integer year) {

@@ -1,5 +1,7 @@
 package com.bookmanagement.controller;
 
+import com.bookmanagement.dto.BookRequestDTO;
+import com.bookmanagement.dto.BookSummaryDTO;
 import com.bookmanagement.model.Book;
 import com.bookmanagement.service.BookService;
 import io.swagger.v3.oas.annotations.Operation;
@@ -44,7 +46,7 @@ public class BookController {
                     description = "Authentication required"
             )
     })
-    public List<Book> getAllBooks() {
+    public List<BookSummaryDTO> getAllBooks() {
         return bookService.getAllBooks();
     }
 
@@ -69,7 +71,7 @@ public class BookController {
                     description = "Authentication required"
             )
     })
-    public Book getBookById(
+    public BookSummaryDTO getBookById(
             @Parameter(description = "ID of the book to retrieve", required = true)
             @PathVariable Long id) {
         return bookService.getBookById(id);
@@ -96,10 +98,10 @@ public class BookController {
                     description = "Authentication required"
             )
     })
-    public ResponseEntity<Book> createBook(
+    public ResponseEntity<BookSummaryDTO> createBook(
             @Parameter(description = "Book object to be created", required = true)
-            @Valid @RequestBody Book book) {
-        Book created = bookService.createBook(book);
+            @Valid @RequestBody BookRequestDTO book) {
+        BookSummaryDTO created = bookService.createBook(book);
         return ResponseEntity.status(HttpStatus.CREATED).body(created);
     }
 
@@ -128,11 +130,11 @@ public class BookController {
                     description = "Authentication required"
             )
     })
-    public Book updateBook(
+    public BookSummaryDTO updateBook(
             @Parameter(description = "ID of the book to update", required = true)
             @PathVariable Long id,
             @Parameter(description = "Updated book object", required = true)
-            @Valid @RequestBody Book book) {
+            @Valid @RequestBody BookRequestDTO book) {
         return bookService.updateBook(id, book);
     }
 

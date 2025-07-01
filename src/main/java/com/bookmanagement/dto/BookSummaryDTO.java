@@ -20,4 +20,7 @@ public class BookSummaryDTO {
 
     @Schema(description = "Author", example = "Robert C. Martin")
     private String author;
+
+    @Schema(description = "Published year", example = "2008")
+    private Integer publishedYear;
 }
