@@ -26,7 +26,7 @@ git clone git@github.com:yourusername/book-management-api.git
 cd book-management-api
 
 # Build the JAR file using Maven wrapper
-./mvnw clean package -DskipTests
+./mvnw clean package
 
 # Build and run with Docker Compose
 docker-compose up --build
@@ -38,7 +38,7 @@ open http://localhost:8080
 ### Run Locally (Development)
 ```bash
 # Build the application using Maven wrapper
-./mvnw clean package -DskipTests
+./mvnw clean package
 
 # Run the Spring Boot application
 ./mvnw spring-boot:run

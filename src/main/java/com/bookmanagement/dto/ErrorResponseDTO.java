@@ -14,7 +14,7 @@ import java.util.Map;
 @NoArgsConstructor
 @AllArgsConstructor
 @JsonInclude(JsonInclude.Include.NON_NULL)
-public class ErrorResponse {
+public class ErrorResponseDTO {
     private LocalDateTime timestamp;
     private int status;
     private String error;

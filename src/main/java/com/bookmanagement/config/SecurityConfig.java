@@ -3,6 +3,7 @@ package com.bookmanagement.config;
 
 import org.springframework.context.annotation.Bean;
 import org.springframework.context.annotation.Configuration;
+import org.springframework.security.config.annotation.method.configuration.EnableMethodSecurity;
 import org.springframework.security.config.annotation.web.builders.HttpSecurity;
 import org.springframework.security.config.annotation.web.configuration.EnableWebSecurity;
 import org.springframework.security.core.userdetails.User;
@@ -15,12 +16,13 @@ import org.springframework.security.web.SecurityFilterChain;
 
 @Configuration
 @EnableWebSecurity
+@EnableMethodSecurity
 public class SecurityConfig {
     @Bean
     public SecurityFilterChain filterChain(HttpSecurity http) throws Exception {
         http
                 .authorizeHttpRequests(authz -> authz
-                        // Public endpoints (no authentication required)
+                        // Public endpoints
                         .requestMatchers("/h2-console/**").permitAll()
                         .requestMatchers("/actuator/**").permitAll()
                         .requestMatchers("/error").permitAll()
@@ -46,7 +48,6 @@ public class SecurityConfig {
                 )
                 .logout(logout -> logout.permitAll())
 
-                // Disable CSRF for H2 console and API endpoints
                 .csrf(csrf -> csrf.disable()) // Disable CSRF entirely for development
 
                 // Disable security headers for H2 console to work

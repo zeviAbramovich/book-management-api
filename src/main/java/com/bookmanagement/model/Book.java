@@ -30,5 +30,6 @@ public class Book {
     @NotNull(message = "Published year is required")
     @Min(value = 1500, message = "Published year must be no earlier than 1500")
     @Schema(description = "Year the book was published", example = "2008", required = true, minimum = "1500")
+    @Column(name = "published_year")
     private Integer publishedYear;
 } 
