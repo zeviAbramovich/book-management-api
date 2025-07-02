@@ -2,12 +2,14 @@ package com.bookmanagement.dto;
 
 import io.swagger.v3.oas.annotations.media.Schema;
 import lombok.AllArgsConstructor;
+import lombok.Builder;
 import lombok.Data;
 import lombok.NoArgsConstructor;
 
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Builder
 @Schema(description = "Request DTO for book order")
 public class BookRequestDTO {
     @Schema(description = "Title", example = "Clean Code")
