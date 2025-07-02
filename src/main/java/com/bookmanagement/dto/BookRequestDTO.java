@@ -8,6 +8,7 @@ import lombok.NoArgsConstructor;
 @Data
 @NoArgsConstructor
 @AllArgsConstructor
+@Schema(description = "Request DTO for book order")
 public class BookRequestDTO {
     @Schema(description = "Title", example = "Clean Code")
     private String title;
