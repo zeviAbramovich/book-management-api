@@ -50,7 +50,7 @@ java -jar target/book-management-api-1.0-SNAPSHOT.jar
 ## 📋 Features
 
 ### Core Functionality
-- ✅ **Complete CRUD operations** for books
+- ✅ **Complete CRUD operations** for books, users, and orders
 - ✅ **Input validation** with custom error messages
 - ✅ **Role-based authentication** (USER/ADMIN)
 - ✅ **Method-level security** with annotations
@@ -61,6 +61,7 @@ java -jar target/book-management-api-1.0-SNAPSHOT.jar
 - ✅ **In-memory user authentication** with encrypted passwords
 - ✅ **Role-based access control** with @PreAuthorize annotations
 - ✅ **Fine-grained permissions** (USER: read/write, ADMIN: full access)
+- ✅ **User-specific data access** (users can only access their own orders)
 - ✅ **Secure endpoints** with method-level security
 - ✅ **Public development endpoints** (Swagger, H2 Console, Health checks)
 
@@ -70,7 +71,14 @@ java -jar target/book-management-api-1.0-SNAPSHOT.jar
 - ✅ **H2 in-memory database** for development
 - ✅ **Layered architecture** (Controller → Service → Repository)
 - ✅ **Bean validation** with Jakarta Validation
+- ✅ **MapStruct DTO mapping** for efficient object transformations
+- ✅ **JPA relationships** with proper cascade and fetch strategies
 - ✅ **Health check endpoints** for monitoring
+
+### Advanced Features
+- ✅ **Custom analytics queries** for business intelligence
+- ✅ **Data relationships** (User→Orders→Books)
+- ✅ **Complex JPQL queries** with aggregation and reporting
 
 ## 🛠️ Technology Stack
 
@@ -83,16 +91,17 @@ java -jar target/book-management-api-1.0-SNAPSHOT.jar
 | **Documentation** | SpringDoc OpenAPI | 2.0.4 |
 | **Build Tool** | Maven | 3.6+ (wrapper included) |
 | **Containerization** | Docker | Latest |
+| **Object Mapping** | MapStruct | Latest |
 
 ## 🔐 Authentication & Authorization
 
 ### User Accounts
 The application includes two pre-configured users with different permission levels:
 
-| User | Username | Password | Roles | Permissions |
-|------|----------|----------|-------|-------------|
-| **Regular User** | `user` | `password` | USER | Read books, Create books, Update books |
-| **Administrator** | `admin` | `password` | USER, ADMIN | Full access (including delete operations) |
+| User | Username | Password | Roles | Permissions                                               |
+|------|----------|----------|-------|-----------------------------------------------------------|
+| **Regular User** | `user` | `password` | USER | Read books, Create books, Update books, Manage own orders |
+| **Administrator** | `admin` | `password` | USER, ADMIN | Full access (including delete operations and analytics)                |
 
 ### Security Implementation
 - **Authentication**: HTTP Basic Authentication with BCrypt password encoding
@@ -103,11 +112,21 @@ The application includes two pre-configured users with different permission leve
 ### Permission Matrix
 | Operation | Endpoint | USER Role | ADMIN Role |
 |-----------|----------|-----------|------------|
-| **View Books** | `GET /api/v1/books` | ✅ | ✅ |
-| **View Single Book** | `GET /api/v1/books/{id}` | ✅ | ✅ |
-| **Create Book** | `POST /api/v1/books` | ✅ | ✅ |
-| **Update Book** | `PUT /api/v1/books/{id}` | ✅ | ✅ |
-| **Delete Book** | `DELETE /api/v1/books/{id}` | ❌ | ✅ |
+| **View Books** | `GET /api/v1/books` | ✅         | ✅          |
+| **View Single Book** | `GET /api/v1/books/{id}` | ✅         | ✅          |
+| **Create Book** | `POST /api/v1/books` | ✅         | ✅          |
+| **Update Book** | `PUT /api/v1/books/{id}` | ✅         | ✅          |
+| **Delete Book** | `DELETE /api/v1/books/{id}` | ❌         | ✅          |
+| **View Users** | `GET /api/v1/users` | ❌         | ✅          |
+| **View User Profile** | `GET /api/v1/users/{id}` | ✅(own)    | ✅(all)     |
+| **Create User** | `POST /api/v1/users` | ✅         | ✅          |
+| **View User Orders** | `GET /api/v1/users/{id}/orders` | ✅(own)         | ✅(all)          |
+| **View All Orders** | `GET /api/v1/orders` | ❌         | ✅          |
+| **View Order Details** | `GET /api/v1/orders/{id}` | ✅(own)         | ✅(all)          |
+| **Create Order** | `POST /api/v1/orders` | ✅         | ✅          |
+| **Update Order** | `PUT /api/v1/orders/{id}` | ❌         | ✅          |
+| **Delete Order** | `DELETE /api/v1/orders/{id}` | ❌         | ✅          |
+| **Analytics Queries** | `GET /api/v1/users/order-statistics` | ❌         | ✅          |
 
 ## 📖 API Documentation
 
@@ -121,6 +140,30 @@ The application includes two pre-configured users with different permission leve
 | `POST` | `/api/v1/books` | Create new book | USER, ADMIN |
 | `PUT` | `/api/v1/books/{id}` | Update existing book | USER, ADMIN |
 | `DELETE` | `/api/v1/books/{id}` | Delete book | ADMIN only |
+
+#### Users API
+| Method | Endpoint             | Description          | Required Role |
+|--------|----------------------|----------------------|---------------|
+| `GET`  | `/api/v1/users`      | Get all users        | ADMIN only |
+| `GET`  | `/api/v1/users/{id}` | Get user by ID       | USER (own), ADMIN (all) |
+| `POST` | `/api/v1/users`      | Create new user      | Public |
+| `GET`  | `/api/v1/users/{id}/orders` | Get user's orders | USER (own), ADMIN (all) |
+
+#### Orders API
+| Method | Endpoint             | Description          | Required Role |
+|--------|----------------------|----------------------|---------------|
+| `GET`  | `/api/v1/orders`      | Get all orders        | ADMIN only |
+| `GET`  | `/api/v1/orders/{id}` | Get order by ID       | USER (own), ADMIN (all) |
+| `POST` | `/api/v1/orders`      | Create new orders      | USER, ADMIN |
+| `PUT`  | `/api/v1/orders/{id}` | Update order | ADMIN only |
+| `DELETE`  | `/api/v1/orders/{id}` | Delete order | ADMIN only |
+
+#### Analytics API (Business Intelligence)
+| Method   | Endpoint             | Description      | Required Role |
+|----------|----------------------|------------------|---------------|
+| `GET`    | `/api/v1/users/with-orders-above/{count}`      | Users with >N orders | ADMIN only |
+| `GET`    | `/api/v1/users/order-statistics` | Order statistics per user  | ADMIN only |
+| `GET`    | `/api/v1/users/without-orders`      | Users with no orders | ADMIN only |
 
 #### Development Endpoints (No Authentication Required)
 | Method | Endpoint | Description |
@@ -158,7 +201,7 @@ CMD ["java", "-jar", "app.jar"]
 ### Docker Commands
 ```bash
 # Build JAR using Maven wrapper
-./mvnw clean package -DskipTests
+./mvnw clean package
 
 # Build image manually
 docker build -t book-management-api .
@@ -228,6 +271,27 @@ curl -u user:password -X POST http://localhost:8080/api/v1/books \
     "author": "Robert C. Martin",
     "publishedYear": 2008
   }'
+  
+# Create a new user
+curl -X POST http://localhost:8080/api/v1/users \
+  -H "Content-Type: application/json" \
+  -d '{
+    "username": "john_doe",
+    "email": "john@example.com",
+    "fullName": "John Doe"
+  }'
+  
+# Create a new order
+curl -u user:password -X POST http://localhost:8080/api/v1/orders \
+  -H "Content-Type: application/json" \
+  -d '{
+    "userId": 1,
+    "bookIds": [1, 2],
+    "totalAmount": 59.98
+  }'
+  
+# Get user order statistics (ADMIN only)
+curl -u admin:password http://localhost:8080/api/v1/users/order-statistics
 
 # Update existing book (USER or ADMIN)
 curl -u user:password -X PUT http://localhost:8080/api/v1/books/1 \
@@ -255,12 +319,29 @@ curl http://localhost:8080/actuator/health
 curl http://localhost:8080/v3/api-docs
 ```
 
+## Sample Object
 ### Sample Book Object
 ```json
 {
   "title": "Effective Java",
   "author": "Joshua Bloch",
   "publishedYear": 2017
+}
+```
+### Sample User Object
+```json
+{
+  "username": "john_doe",
+  "email": "john@example.com",
+  "fullName": "John Doe"
+}
+```
+### Sample Order  Object
+```json
+{
+  "userId": 1,
+  "bookIds": [1, 2],
+  "totalAmount": 59.98
 }
 ```
 
@@ -292,28 +373,6 @@ curl http://localhost:8080/v3/api-docs
 └─────────────────┘
 ```
 
-### Package Structure
-```
-src/main/java/com/bookmanagement/
-├── config/              # Configuration classes
-│   ├── SecurityConfig.java      # Security configuration with @EnableMethodSecurity
-│   └── SwaggerConfig.java       # API documentation configuration
-├── controller/          # REST controllers with @PreAuthorize
-│   └── BookController.java      # Role-based endpoint security
-├── dto/                 # Data transfer objects
-│   └── ErrorResponse.java       # Standardized error responses
-├── exception/           # Exception handling
-│   └── GlobalExceptionHandler.java  # Global error handling
-├── model/               # JPA entities
-│   └── Book.java               # Book entity with validation
-├── repository/          # Data access
-│   └── BookRepository.java     # JPA repository interface
-├── service/             # Business logic
-│   ├── BookService.java        # Service interface
-│   └── BookServiceImpl.java    # Service implementation
-└── BookManagementApiApplication.java  # Main application class
-```
-
 ## 🔍 Security Implementation Details
 
 ### Method-Level Security
@@ -325,6 +384,9 @@ public List<Book> getAllBooks() { ... }
 
 @PreAuthorize("hasRole('ADMIN')")
 public ResponseEntity<Void> deleteBook(@PathVariable Long id) { ... }
+
+@PreAuthorize("hasRole('ADMIN') or (hasRole('USER') and #id == authentication.principal.id)")
+public UserResponseDTO getUserById(@PathVariable Long id) { ... }
 ```
 
 ### Password Security
@@ -345,6 +407,20 @@ public ResponseEntity<Void> deleteBook(@PathVariable Long id) { ... }
 | **title** | Not blank, not null | "Clean Code" | "Title must not be blank" |
 | **author** | Not blank, not null | "Robert C. Martin" | "Author must not be blank" |
 | **publishedYear** | Not null, ≥ 1500, ≤ current year | 2008 | "Published year must be between 1500 and current year" |
+
+### User Entity Validation
+| Field             | Rules | Example | Error Message |
+|-------------------|-------|---------|---------------|
+| **username**      | Not blank, unique | "john_doe" | "Username must not be blank" |
+| **email**         | Valid email, unique | "john@example.com" | "Email must be valid" |
+| **fullName** | Not blank | "John Doe" | "Full name must not be blank" |
+
+### Order Entity Validation
+| Field | Rules | Example | Error Message |
+|-------|-------|--------|---------------|
+| **userId** | Not null, must exist | 1      | "User ID is required" |
+| **bookIds** | Not empty, all must exist | [1,2]  | "At least one book is required" |
+| **totalAmount** | ≥ 0.01 | 59.98   | "Total amount must be greater than 0" |
 
 ### Security Validation
 | Action | Validation | Response |
@@ -396,6 +472,10 @@ curl -u user:password -X DELETE http://localhost:8080/api/v1/books/1  # Should f
 curl -u admin:password http://localhost:8080/api/v1/books
 curl -u admin:password -X DELETE http://localhost:8080/api/v1/books/1  # Should succeed
 
+# Test analytics access
+curl -u user:password http://localhost:8080/api/v1/users/order-statistics  # Should fail
+curl -u admin:password http://localhost:8080/api/v1/users/order-statistics  # Should succeed
+
 # Test unauthenticated access
 curl http://localhost:8080/api/v1/books  # Should require authentication
 ```
@@ -409,6 +489,8 @@ curl http://localhost:8080/api/v1/books  # Should require authentication
 | **Invalid credentials** | 401 Unauthorized | Bad credentials |
 | **USER tries DELETE** | 403 Forbidden | Access denied |
 | **ADMIN tries DELETE** | 204 No Content | Success |
+| **USER tries analytics** | 403 Forbidden | Access denied |
+| **ADMIN tries analytics** | 200 OK | Analytics data |
 
 ### Code Standards
 - **Java 17** features and syntax
@@ -428,11 +510,13 @@ curl http://localhost:8080/api/v1/books  # Should require authentication
 - **Docker**: Ensures consistent environment across different systems
 - **Swagger**: Provides immediate API testing capability
 - **Maven Wrapper**: Ensures consistent build environment without local Maven installation
+- **MapStruct**: Efficient DTO mapping with compile-time generation
 
 ### Security Design Choices
 - **@EnableMethodSecurity**: Modern Spring Security approach for fine-grained permissions
 - **@PreAuthorize**: Declarative security at method level for better maintainability
 - **Role-based Access Control**: Clear separation between USER and ADMIN capabilities
+- **User-specific Access**: Users can only access their own orders and profile data
 - **BCrypt Encryption**: Industry-standard password hashing
 - **Stateful Sessions**: Appropriate for demo environment
 
@@ -450,15 +534,18 @@ curl http://localhost:8080/api/v1/books  # Should require authentication
 - **Immediate Setup**: `./mvnw clean package -DskipTests && docker-compose up --build`
 - **Interactive Testing**: Swagger UI with built-in authentication
 - **Role-based Demo**: Easy to demonstrate USER vs ADMIN capabilities
+- **Business Intelligence**: Advanced analytics queries showcasing complex JPQL
 - **Professional Structure**: Clean architecture with proper security implementation
 - **Scalable Security**: Method-level annotations ready for enterprise growth
 
 ### Security Features Demonstrated
 - **Authentication**: Multiple user accounts with different roles
 - **Authorization**: Fine-grained permissions using annotations
+- **User-specific Data Access**: Users can only access their own orders and profile
 - **Input Validation**: Comprehensive validation with custom error messages
 - **Error Handling**: Proper HTTP status codes and security-aware responses
 - **Documentation**: Security requirements clearly documented in Swagger
+- **Analytics Security**: Business intelligence endpoints restricted to admin users
 
 ## 📄 License
 
